@@ -5,6 +5,7 @@ using Presentation.Interfaces;
 using Presentation.Model.Security;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Presentation.Services
@@ -45,7 +46,21 @@ namespace Presentation.Services
             //return await _emailService.SendEmailAsync(email, token);
         }
 
-        public bool VerifyLogin(UserConfiguration user)
+        public string GenerateRandomCode()
+        {
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                byte[] randomBytes = new byte[4];
+                rng.GetBytes(randomBytes);
+                // Convert bytes to an integer and ensure it's positive
+                int code = BitConverter.ToInt32(randomBytes, 0);
+                code = Math.Abs(code % 1000000);
+                // Format the number as a six-digit string (with leading zeros if needed)
+                return code.ToString("D6");
+            }
+        }
+
+        private bool VerifyLogin(UserConfiguration user)
         {
             if (user == null)
             {
@@ -54,11 +69,6 @@ namespace Presentation.Services
             return true;
         }
 
-        public bool VerifyLogin(string token)
-        {
-            return false;
-            //return _users.Values.Contains(token);
-        }
 
         private string GenerateJwtToken(UserConfiguration user)
         {
